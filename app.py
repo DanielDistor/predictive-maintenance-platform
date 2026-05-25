@@ -12,7 +12,11 @@ def get_data():
     return add_rul(df)
 
 
-df = get_data()
+try:
+    df = get_data()
+except FileNotFoundError:
+    st.error("Dataset not found. Place `train_FD001.txt` in the `data/` folder. See README for setup instructions.")
+    st.stop()
 
 st.title("Predictive Maintenance Platform")
 st.caption("NASA C-MAPSS FD001 — Turbofan Engine Degradation Dataset")

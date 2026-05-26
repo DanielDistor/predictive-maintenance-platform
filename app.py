@@ -59,24 +59,103 @@ with st.sidebar:
     st.subheader("Navigation")
     page = st.radio(
         "",
-        ["Fleet Overview", "Engine Deep Dive", "About the Dataset"],
+        ["About the Dataset", "Fleet Overview", "Engine Deep Dive"],
         label_visibility="collapsed",
     )
     st.divider()
 
     st.subheader("Dataset Info")
     st.markdown(f"""
-    **Dataset:** NASA C-MAPSS FD001
-    **Engines:** {fleet['engine_id'].nunique()}
-    **Total Rows:** {len(df):,}
-    **Avg Engine Life:** {fleet['max_cycle'].mean():.0f} cycles
-    **Sensors:** 21 (13 informative)
+    This dashboard uses the **NASA C-MAPSS FD001** dataset, which contains simulated
+    run-to-failure data for {fleet['engine_id'].nunique()} turbofan aircraft engines.
+    Across all engines, there are **{len(df):,} recorded cycles**, with an average engine
+    lifetime of **{fleet['max_cycle'].mean():.0f} cycles** before failure. Each cycle
+    captures readings from 21 onboard sensors, of which 13 show meaningful degradation
+    trends over time.
     """)
 
 # ═════════════════════════════════════════════════════════════════════════════
-# PAGE 1 — Fleet Overview
+# PAGE 1 — About the Dataset
 # ═════════════════════════════════════════════════════════════════════════════
-if page == "Fleet Overview":
+if page == "About the Dataset":
+    st.markdown("# 📖 About the Dataset")
+    st.caption("NASA C-MAPSS — Commercial Modular Aero-Propulsion System Simulation")
+    st.divider()
+
+    st.markdown("""
+    ### What is this dataset?
+
+    The **C-MAPSS** dataset was created by NASA to simulate how turbofan aircraft engines
+    degrade over time. Each engine starts healthy and runs through repeated cycles until it
+    fails. 21 sensor readings are recorded every cycle, capturing how the engine changes
+    as it wears out.
+
+    The goal of this platform is to predict **Remaining Useful Life (RUL)** — how many cycles
+    an engine has left before breakdown — so that maintenance can be scheduled at exactly the
+    right time, avoiding both surprise failures and costly over-servicing.
+    """)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("""
+        **Engine ID** is a unique number from 1 to 100 assigned to each turbofan engine in
+        the dataset. Every engine is tracked independently from its first cycle until failure.
+
+        **Cycle** represents one complete operational cycle, roughly equivalent to one flight.
+        Each engine starts at cycle 1 and the data ends at the cycle where the engine failed.
+
+        **RUL (Remaining Useful Life)** is the number of cycles left before an engine fails.
+        It is calculated as the total lifetime minus the current cycle, so it counts down to
+        zero at the moment of failure.
+
+        **op_1, op_2, op_3** are operational settings such as altitude, throttle angle, and
+        fan speed command. In FD001, these are nearly constant across all engines.
+        """)
+    with col2:
+        st.markdown("""
+        **Sensors 1 through 21** capture physical measurements inside the engine, including
+        temperatures, pressures, fan and core speeds, and fuel flow rates. Only 13 of the 21
+        sensors show meaningful change over an engine's lifetime. The other 8 are essentially
+        flat and provide no useful signal for predicting failure.
+
+        **FD001** is the simplest subset of the C-MAPSS collection. It uses a single operating
+        condition and a single failure mode, making it the ideal starting point for building and
+        validating predictive maintenance methods. The dataset includes 100 training engines,
+        all run to failure.
+
+        **Degradation** is the gradual wear captured as sensor readings drift upward or downward
+        over an engine's lifetime. These trends are the signal the model learns from to estimate
+        how much useful life remains.
+        """)
+
+    st.divider()
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Training Engines", fleet["engine_id"].nunique())
+    m2.metric("Total Rows", f"{len(df):,}")
+    m3.metric("Informative Sensors", 13)
+    m4.metric("Avg Engine Life", f"{fleet['max_cycle'].mean():.0f} cycles")
+
+    st.divider()
+    st.markdown("""
+    ### Why Predictive Maintenance?
+
+    A single unplanned engine shop visit costs roughly $500,000 in emergency labor, parts,
+    and flight cancellations. A scheduled visit for the same work costs around $50,000.
+    That is a ten-times difference — driven entirely by whether the failure was anticipated.
+    Predictive maintenance uses sensor data to anticipate failures before they happen, so
+    airlines can service engines at the right time rather than reacting after something breaks.
+
+    ### What is Coming in Phase 2
+
+    The next phase will add an LSTM neural network that predicts RUL from rolling sensor
+    windows, confidence intervals to show prediction uncertainty, engineered health features,
+    and a composite health score from 0 to 100 per engine.
+    """)
+
+# ═════════════════════════════════════════════════════════════════════════════
+# PAGE 2 — Fleet Overview
+# ═════════════════════════════════════════════════════════════════════════════
+elif page == "Fleet Overview":
     st.markdown("# ✈️ Fleet Health Overview")
     st.caption("Engine lifetime analysis — NASA C-MAPSS FD001")
     st.divider()
@@ -275,69 +354,3 @@ elif page == "Engine Deep Dive":
     )
     st.plotly_chart(fig_compare, width="stretch")
 
-# ═════════════════════════════════════════════════════════════════════════════
-# PAGE 3 — About
-# ═════════════════════════════════════════════════════════════════════════════
-elif page == "About the Dataset":
-    st.markdown("# 📖 About the Dataset")
-    st.caption("NASA C-MAPSS — Commercial Modular Aero-Propulsion System Simulation")
-    st.divider()
-
-    st.markdown("""
-    ### What is this dataset?
-
-    The **C-MAPSS** dataset was created by NASA to simulate how turbofan aircraft engines
-    degrade over time. Each engine starts healthy and runs through repeated cycles until it
-    fails. 21 sensor readings are recorded every cycle, capturing how the engine changes
-    as it wears out.
-
-    **The goal:** predict **Remaining Useful Life (RUL)** — how many cycles an engine has
-    left before breakdown.
-    """)
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
-        **Engine ID** — unique number (1–100) for each turbofan engine.
-
-        **Cycle** — one operational cycle (think: one flight). Starts at 1, ends at failure.
-
-        **RUL (Remaining Useful Life)** — cycles left before failure.
-        `RUL = total_cycles − current_cycle`. At the last cycle, RUL = 0.
-
-        **op_1, op_2, op_3** — operational settings like altitude and throttle.
-        """)
-    with col2:
-        st.markdown("""
-        **sensor_1–21** — physical measurements (temperature, pressure, fan speed, etc.).
-        Only 13 of the 21 sensors change meaningfully over time — those are the ones
-        this dashboard uses.
-
-        **FD001** — the simplest C-MAPSS subset. One operating condition,
-        one failure mode. 100 training engines, all run to failure.
-
-        **Degradation** — gradual wear captured as sensor trends drifting
-        upward or downward over an engine's lifetime.
-        """)
-
-    st.divider()
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Training Engines", fleet["engine_id"].nunique())
-    m2.metric("Total Rows", f"{len(df):,}")
-    m3.metric("Informative Sensors", 13)
-    m4.metric("Avg Engine Life", f"{fleet['max_cycle'].mean():.0f} cycles")
-
-    st.divider()
-    st.markdown("""
-    ### Why Predictive Maintenance?
-
-    - A single **unplanned** engine shop visit costs ~$500,000
-    - A **scheduled** visit costs ~$50,000 — a 10× difference
-    - Predicting RUL lets airlines service engines at exactly the right time
-
-    ### What's Coming (Phase 2)
-    - LSTM model to predict RUL from sensor windows
-    - Uncertainty quantification (confidence intervals on predictions)
-    - Sensor feature engineering
-    - Health score per engine (0–100)
-    """)

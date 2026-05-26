@@ -78,78 +78,94 @@ with st.sidebar:
 # PAGE 1 — About the Dataset
 # ═════════════════════════════════════════════════════════════════════════════
 if page == "About the Dataset":
-    st.markdown("# 📖 About the Dataset")
-    st.caption("NASA C-MAPSS — Commercial Modular Aero-Propulsion System Simulation")
+    st.markdown("# 📖 About This Project")
+    st.caption("Predicting aircraft engine failure before it happens — NASA C-MAPSS FD001")
     st.divider()
 
     st.markdown("""
-    ### What is this dataset?
+    ### The Problem
 
-    The **C-MAPSS** dataset was created by NASA to simulate how turbofan aircraft engines
-    degrade over time. Each engine starts healthy and runs through repeated cycles until it
-    fails. 21 sensor readings are recorded every cycle, capturing how the engine changes
-    as it wears out.
+    Imagine you run an airline with 100 engines flying every day. Right now, most airlines
+    service engines on a fixed schedule — every 500 flights, say — whether the engine needs
+    it or not. That is like changing your car's oil every three months even if you have only
+    driven 200 miles.
 
-    The goal of this platform is to predict **Remaining Useful Life (RUL)** — how many cycles
-    an engine has left before breakdown — so that maintenance can be scheduled at exactly the
-    right time, avoiding both surprise failures and costly over-servicing.
+    The problem is that some engines degrade faster than others. A fixed schedule means you
+    are either servicing perfectly healthy engines too early, wasting around **$50,000 per
+    unnecessary visit**, or missing a degrading engine that fails mid-air, which costs
+    **$500,000 or more** and puts lives at risk. That is a ten-times difference driven
+    entirely by whether the failure was anticipated.
+
+    This platform is built to change that. Instead of guessing based on a calendar, it reads
+    live sensor data from each engine and predicts exactly how many cycles of useful life that
+    engine has left.
     """)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
-        **Engine ID** is a unique number from 1 to 100 assigned to each turbofan engine in
-        the dataset. Every engine is tracked independently from its first cycle until failure.
+    st.divider()
 
-        **Cycle** represents one complete operational cycle, roughly equivalent to one flight.
-        Each engine starts at cycle 1 and the data ends at the cycle where the engine failed.
+    st.markdown("### The Dataset")
+    st.markdown("""
+    The data comes from NASA's **C-MAPSS** simulation (Commercial Modular Aero-Propulsion
+    System Simulation), which models how real turbofan aircraft engines wear down over time.
+    Each of the 100 engines in the dataset starts healthy and runs cycle by cycle — one cycle
+    is roughly one flight — until it fails. Every cycle, 21 sensors record what is happening
+    inside the engine: temperatures, pressures, fan speeds, fuel flow, and more.
 
-        **RUL (Remaining Useful Life)** is the number of cycles left before an engine fails.
-        It is calculated as the total lifetime minus the current cycle, so it counts down to
-        zero at the moment of failure.
-
-        **op_1, op_2, op_3** are operational settings such as altitude, throttle angle, and
-        fan speed command. In FD001, these are nearly constant across all engines.
-        """)
-    with col2:
-        st.markdown("""
-        **Sensors 1 through 21** capture physical measurements inside the engine, including
-        temperatures, pressures, fan and core speeds, and fuel flow rates. Only 13 of the 21
-        sensors show meaningful change over an engine's lifetime. The other 8 are essentially
-        flat and provide no useful signal for predicting failure.
-
-        **FD001** is the simplest subset of the C-MAPSS collection. It uses a single operating
-        condition and a single failure mode, making it the ideal starting point for building and
-        validating predictive maintenance methods. The dataset includes 100 training engines,
-        all run to failure.
-
-        **Degradation** is the gradual wear captured as sensor readings drift upward or downward
-        over an engine's lifetime. These trends are the signal the model learns from to estimate
-        how much useful life remains.
-        """)
+    Not all 21 sensors are useful. Eight of them barely change across an engine's entire
+    lifetime and carry no signal about degradation. This platform focuses on the 13 sensors
+    that do drift meaningfully as wear accumulates, because those are the ones that actually
+    tell you something is changing.
+    """)
 
     st.divider()
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Training Engines", fleet["engine_id"].nunique())
-    m2.metric("Total Rows", f"{len(df):,}")
+    m2.metric("Total Cycles Recorded", f"{len(df):,}")
     m3.metric("Informative Sensors", 13)
-    m4.metric("Avg Engine Life", f"{fleet['max_cycle'].mean():.0f} cycles")
+    m4.metric("Avg Engine Lifetime", f"{fleet['max_cycle'].mean():.0f} cycles")
+
+    st.divider()
+
+    st.markdown("### Key Terms")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("""
+        **Engine ID** is a unique identifier from 1 to 100 assigned to each turbofan engine.
+        Every engine is tracked independently from its very first cycle until the cycle it fails.
+
+        **Cycle** is one complete operational run, roughly equivalent to one flight. Each engine
+        starts at cycle 1, and the recording ends at whatever cycle the engine finally breaks down.
+
+        **RUL (Remaining Useful Life)** is how many cycles an engine has left before it fails.
+        At the very last cycle before failure, RUL is zero. Earlier in the engine's life, RUL
+        is high. Watching it count down is how you know when to act.
+        """)
+    with col2:
+        st.markdown("""
+        **Sensors** are the 21 physical measurements recorded each cycle — things like exhaust
+        temperature, high-pressure turbine efficiency, and bypass ratio. They are the raw signal
+        the model reads to understand how degraded an engine is. Only 13 of these change in ways
+        that actually correlate with wear.
+
+        **Degradation** is the gradual drift in sensor readings as an engine wears out. Some
+        sensors trend upward over time, others trend downward. The pattern of those trends,
+        taken together, is what reveals that an engine is approaching failure.
+
+        **FD001** is the specific subset of C-MAPSS used here. It is the simplest version: one
+        operating condition, one failure mode, 100 engines all run to failure. It is the right
+        place to start building and validating a predictive maintenance system.
+        """)
 
     st.divider()
     st.markdown("""
-    ### Why Predictive Maintenance?
-
-    A single unplanned engine shop visit costs roughly $500,000 in emergency labor, parts,
-    and flight cancellations. A scheduled visit for the same work costs around $50,000.
-    That is a ten-times difference — driven entirely by whether the failure was anticipated.
-    Predictive maintenance uses sensor data to anticipate failures before they happen, so
-    airlines can service engines at the right time rather than reacting after something breaks.
-
     ### What is Coming in Phase 2
 
-    The next phase will add an LSTM neural network that predicts RUL from rolling sensor
-    windows, confidence intervals to show prediction uncertainty, engineered health features,
-    and a composite health score from 0 to 100 per engine.
+    Phase 1, what you are looking at now, is the foundation: clean data, correct RUL
+    calculations, and a dashboard that makes the dataset legible. Phase 2 will train an LSTM
+    neural network on the sensor sequences to actually predict RUL for engines it has never
+    seen before. It will also add confidence intervals so the system can say not just "6 cycles
+    left" but "between 1 and 10 cycles, with 90% confidence" — because in safety-critical
+    systems, knowing how uncertain a prediction is matters just as much as the prediction itself.
     """)
 
 # ═════════════════════════════════════════════════════════════════════════════

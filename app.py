@@ -32,6 +32,12 @@ def get_tier(max_cycle):
     return "Healthy"
 
 
+def hex_to_rgba(hex_color, alpha):
+    h = hex_color.lstrip("#")
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
 # ── Data loading ──────────────────────────────────────────────────────────────
 @st.cache_data
 def get_data():
@@ -295,7 +301,7 @@ elif page == "Engine Deep Dive":
             mode="lines",
             fill="tozeroy",
             line=dict(color=color, width=2.5),
-            fillcolor=f"{color}28",
+            fillcolor=hex_to_rgba(color, 0.15),
             hovertemplate="Cycle %{x}<br><b>RUL: %{y} cycles</b><extra></extra>",
         ))
         fig_rul.add_hline(y=0, line_color="#555", line_width=1)

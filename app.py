@@ -72,12 +72,15 @@ with st.sidebar:
 
     st.subheader("Dataset Info")
     st.markdown(f"""
-    This dashboard uses the **NASA C-MAPSS FD001** dataset, which contains simulated
-    run-to-failure data for {fleet['engine_id'].nunique()} turbofan aircraft engines.
-    Across all engines, there are **{len(df):,} recorded cycles**, with an average engine
-    lifetime of **{fleet['max_cycle'].mean():.0f} cycles** before failure. Each cycle
-    captures readings from 21 onboard sensors, of which 13 show meaningful degradation
-    trends over time.
+**Dataset:** NASA C-MAPSS FD001
+
+**Engines:** {fleet['engine_id'].nunique()}
+
+**Total Cycles:** {len(df):,}
+
+**Avg Lifetime:** {fleet['max_cycle'].mean():.0f} cycles
+
+**Sensors:** 21 (13 informative)
     """)
 
 # ═════════════════════════════════════════════════════════════════════════════

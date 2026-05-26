@@ -79,14 +79,14 @@ with st.sidebar:
 # ═════════════════════════════════════════════════════════════════════════════
 if page == "About the Dataset":
     st.markdown("# 📖 About This Project")
-    st.caption("Predicting aircraft engine failure before it happens — NASA C-MAPSS FD001")
+    st.caption("Predicting aircraft engine failure before it happens. NASA C-MAPSS FD001.")
     st.divider()
 
     st.markdown("""
     ### The Problem
 
     Imagine you run an airline with 100 engines flying every day. Right now, most airlines
-    service engines on a fixed schedule — every 500 flights, say — whether the engine needs
+    service engines on a fixed schedule (every 500 flights, say) whether the engine needs
     it or not. That is like changing your car's oil every three months even if you have only
     driven 200 miles.
 
@@ -107,8 +107,8 @@ if page == "About the Dataset":
     st.markdown("""
     The data comes from NASA's **C-MAPSS** simulation (Commercial Modular Aero-Propulsion
     System Simulation), which models how real turbofan aircraft engines wear down over time.
-    Each of the 100 engines in the dataset starts healthy and runs cycle by cycle — one cycle
-    is roughly one flight — until it fails. Every cycle, 21 sensors record what is happening
+    Each of the 100 engines in the dataset starts healthy and runs cycle by cycle (one cycle
+    is roughly one flight) until it fails. Every cycle, 21 sensors record what is happening
     inside the engine: temperatures, pressures, fan speeds, fuel flow, and more.
 
     Not all 21 sensors are useful. Eight of them barely change across an engine's entire
@@ -142,7 +142,7 @@ if page == "About the Dataset":
         """)
     with col2:
         st.markdown("""
-        **Sensors** are the 21 physical measurements recorded each cycle — things like exhaust
+        **Sensors** are the 21 physical measurements recorded each cycle, including exhaust
         temperature, high-pressure turbine efficiency, and bypass ratio. They are the raw signal
         the model reads to understand how degraded an engine is. Only 13 of these change in ways
         that actually correlate with wear.
@@ -164,7 +164,7 @@ if page == "About the Dataset":
     calculations, and a dashboard that makes the dataset legible. Phase 2 will train an LSTM
     neural network on the sensor sequences to actually predict RUL for engines it has never
     seen before. It will also add confidence intervals so the system can say not just "6 cycles
-    left" but "between 1 and 10 cycles, with 90% confidence" — because in safety-critical
+    left" but "between 1 and 10 cycles, with 90% confidence." In safety-critical
     systems, knowing how uncertain a prediction is matters just as much as the prediction itself.
     """)
 
@@ -173,7 +173,7 @@ if page == "About the Dataset":
 # ═════════════════════════════════════════════════════════════════════════════
 elif page == "Fleet Overview":
     st.markdown("# ✈️ Fleet Health Overview")
-    st.caption("Engine lifetime analysis — NASA C-MAPSS FD001")
+    st.caption("Engine lifetime analysis across 100 turbofan engines. NASA C-MAPSS FD001.")
     st.divider()
 
     # Risk tier counts
@@ -195,8 +195,8 @@ elif page == "Fleet Overview":
         </div>
         """, unsafe_allow_html=True)
 
-    st.markdown("### Fleet Engine Lifetimes — Sorted Most Critical First")
-    st.caption("Each bar = one engine. Height = total cycles before failure. Error bars show ±10% variability estimate.")
+    st.markdown("### Fleet Engine Lifetimes, Sorted Most Critical First")
+    st.caption("Each bar represents one engine. Bar height shows total cycles before failure. Error bars show a 10% variability estimate.")
 
     fig = go.Figure()
     for name, color, _ in TIERS:
@@ -227,7 +227,7 @@ elif page == "Fleet Overview":
 
     fig.update_layout(
         barmode="overlay",
-        xaxis=dict(title="Engines (sorted by lifetime — most critical first)", showticklabels=False),
+        xaxis=dict(title="Engines sorted by lifetime, most critical first", showticklabels=False),
         yaxis_title="Total Cycles Before Failure",
         legend=dict(orientation="h", y=1.08, x=0),
         height=420,
@@ -249,7 +249,7 @@ elif page == "Engine Deep Dive":
                   "Moderate": "🟢", "Healthy": "✅"}
 
     engine_labels = {
-        row["engine_id"]: f"Engine {row['engine_id']}  —  {tier_icons[row['tier']]} {row['tier'].upper()}"
+        row["engine_id"]: f"Engine {row['engine_id']}  {tier_icons[row['tier']]} {row['tier'].upper()}"
         for _, row in fleet.iterrows()
     }
 
@@ -277,9 +277,9 @@ elif page == "Engine Deep Dive":
 
     # Alert banner for critical / high
     if tier == "Critical":
-        st.error(f"🔴 **CRITICAL** — This engine had one of the shortest lifetimes in the fleet ({max_cycle} cycles). Engines in this range are highest priority for maintenance review.")
+        st.error(f"🔴 **CRITICAL** This engine had one of the shortest lifetimes in the fleet at {max_cycle} cycles. Engines in this range are highest priority for maintenance review.")
     elif tier == "High":
-        st.warning(f"🟠 **HIGH RISK** — This engine's lifetime ({max_cycle} cycles) is below the fleet average of {avg_life:.0f} cycles.")
+        st.warning(f"🟠 **HIGH RISK** This engine's lifetime of {max_cycle} cycles is below the fleet average of {avg_life:.0f} cycles.")
 
     st.divider()
 
@@ -287,7 +287,7 @@ elif page == "Engine Deep Dive":
 
     # RUL decline
     with col_rul:
-        st.markdown("**Remaining Useful Life — Full Lifecycle**")
+        st.markdown("**Remaining Useful Life over Full Lifecycle**")
         fig_rul = go.Figure()
         fig_rul.add_trace(go.Scatter(
             x=engine_df["cycle"],
@@ -314,7 +314,7 @@ elif page == "Engine Deep Dive":
     with col_sensor:
         st.markdown("**Sensor Degradation Trends**")
         selected = st.multiselect(
-            "Sensors (normalized 0–1 per sensor so trends are comparable)",
+            "Sensors (each normalized to a 0 to 1 scale so trends are comparable)",
             INFORMATIVE_SENSORS,
             default=["sensor_2", "sensor_3", "sensor_4"],
         )
